@@ -2,18 +2,6 @@ import React, { useMemo } from 'react';
 import { Chessboard, ChessboardDnDProvider } from 'react-chessboard';
 import './ChessBoard.css';
 
-/**
- * Reusable chess board component.
- *
- * Props:
- *   fen        - FEN string for the position to display
- *   orientation - 'white' | 'black'
- *   interactive - if true, allows piece dragging and fires onMove
- *   onMove     - callback({ from, to }) when a move is made
- *   size       - board width in px (default: 400)
- *   highlightSquares - { [square]: { backgroundColor: color } }
- *   lastMove   - { from, to } to highlight the last move
- */
 function ChessBoardInner({
   fen = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
   orientation = 'white',
@@ -22,6 +10,7 @@ function ChessBoardInner({
   size = 400,
   highlightSquares = {},
   lastMove,
+  arrows = [],
 }) {
   const customSquareStyles = useMemo(() => {
     const styles = { ...highlightSquares };
@@ -48,6 +37,7 @@ function ChessBoardInner({
         arePiecesDraggable={interactive}
         boardWidth={size}
         customSquareStyles={customSquareStyles}
+        customArrows={arrows}
         customBoardStyle={{
           borderRadius: '8px',
           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',

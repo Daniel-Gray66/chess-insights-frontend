@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard/Dashboard';
 import RepertoireList from './pages/Repertoire/RepertoireList';
@@ -8,6 +8,8 @@ import DrillPage from './pages/Drill/Drill';
 import DrillPicker from './pages/Drill/DrillPicker';
 import GamesList from './pages/Games/GamesList';
 import GameDetail from './pages/Games/GameDetail';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
 import './styles/global.css';
 
 function useWindowWidth() {
@@ -20,10 +22,33 @@ function useWindowWidth() {
   return width;
 }
 
+// Auth guard — redirects to /login if no token
+function RequireAuth({ children }) {
+  const token = localStorage.getItem('token');
+  const location = useLocation();
+
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
+}
+
+// Redirect away from auth pages if already logged in
+function RedirectIfAuth({ children }) {
+  const token = localStorage.getItem('token');
+
+  if (token) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
+
 function AppLayout({ children }) {
   const [syncing, setSyncing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const username = 'merwinofficial';
+  const username = localStorage.getItem('chessComUsername') || localStorage.getItem('username') || '';
   const width = useWindowWidth();
   const collapsed = width < 800;
 
@@ -116,30 +141,32 @@ function AppLayout({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
-      <AppLayout>
-        <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/repertoire" element={<RepertoireList />} />
-          <Route path="/repertoire/:id" element={<RepertoireDetail />} />
-          <Route path="/repertoire/:id/drill" element={<DrillPage />} />
-          <Route path="/drill" element={<DrillPicker />} />
-          <Route path="/games" element={<GamesList />} />
-          <Route path="/games/:id" element={<GameDetail />} />
-        </Routes>
-      </AppLayout>
-    </BrowserRouter>
-  );
-}
+      <Routes>
+        {/* Auth pages — no sidebar */}
+        <Route path="/login" element={
+          <RedirectIfAuth><Login /></RedirectIfAuth>
+        } />
+        <Route path="/register" element={
+          <RedirectIfAuth><Register /></RedirectIfAuth>
+        } />
 
-function Placeholder({ title }) {
-  return (
-    <div style={{ padding: '40px 0' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 600, letterSpacing: '-0.03em', marginBottom: 8 }}>
-        {title}
-      </h1>
-      <p style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>
-        Coming soon — this page is under construction.
-      </p>
-    </div>
+        {/* Protected pages — with sidebar */}
+        <Route path="/*" element={
+          <RequireAuth>
+            <AppLayout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/games" element={<GamesList />} />
+                <Route path="/games/:id" element={<GameDetail />} />
+                <Route path="/repertoire" element={<RepertoireList />} />
+                <Route path="/repertoire/:id" element={<RepertoireDetail />} />
+                <Route path="/repertoire/:id/drill" element={<DrillPage />} />
+                <Route path="/drill" element={<DrillPicker />} />
+              </Routes>
+            </AppLayout>
+          </RequireAuth>
+        } />
+      </Routes>
+    </BrowserRouter>
   );
 }

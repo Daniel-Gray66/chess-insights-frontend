@@ -390,9 +390,8 @@
 
 /* ── Replay layout ───────────────────────────────────── */
 .game-replay-layout {
-  display: grid;
-  grid-template-columns: auto 300px;
-  gap: 28px;
+  display: flex;
+  gap: 8px;
   align-items: flex-start;
 }
 
@@ -446,11 +445,231 @@
   color: #fff;
 }
 
+/* ── Engine lines panel (between eval bar and board) ── */
+.engine-lines-panel {
+  width: 220px;
+  min-height: 440px;
+  background: var(--bg-secondary, #1c1c1e);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.engine-lines-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-light, #333);
+}
+
+.engine-depth-label {
+  font-size: 11px;
+  color: var(--text-tertiary, #888);
+  font-family: var(--font-mono, monospace);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.engine-analyzing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4ade80;
+  display: inline-block;
+  animation: pulse-dot 1s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.engine-lines-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  overflow-y: auto;
+}
+
+.engine-line-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px;
+  transition: background 0.15s;
+  cursor: default;
+  border-bottom: 1px solid var(--border-light, rgba(255,255,255,0.04));
+}
+
+.engine-line-row:last-child {
+  border-bottom: none;
+}
+
+.engine-line-row:hover {
+  background: var(--bg-tertiary, #2a2a2c);
+}
+
+.engine-line-row--best {
+  background: rgba(0, 120, 255, 0.06);
+}
+
+.engine-line-row--best:hover {
+  background: rgba(0, 120, 255, 0.1);
+}
+
+.engine-line-row--second {
+  background: rgba(0, 200, 80, 0.04);
+}
+
+.engine-line-row--second:hover {
+  background: rgba(0, 200, 80, 0.08);
+}
+
+/* Rank badge */
+.engine-line-rank {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+  background: var(--bg-tertiary, #2a2a2c);
+  color: var(--text-tertiary, #888);
+}
+
+.rank--blue {
+  background: rgba(0, 120, 255, 0.2);
+  color: #5ba3ff;
+}
+
+.rank--green {
+  background: rgba(0, 200, 80, 0.2);
+  color: #4ade80;
+}
+
+/* Score */
+.engine-line-score {
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text-primary, #e5e5e5);
+  min-width: 44px;
+  flex-shrink: 0;
+}
+
+/* Move sequence with piece symbols */
+.engine-line-moves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 5px;
+  overflow: hidden;
+}
+
+.engine-line-move {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: var(--text-secondary, #aaa);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.engine-lines-empty {
+  padding: 20px 10px;
+  font-size: 12px;
+  color: var(--text-tertiary, #888);
+  text-align: center;
+}
+
+/* ── Engine toggle (compact for panel header) ───────── */
+.engine-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border-light, #444);
+  background: transparent;
+  color: var(--text-tertiary, #888);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.engine-toggle:hover {
+  background: var(--bg-tertiary, #2a2a2c);
+}
+
+.engine-toggle--active {
+  background: rgba(74, 144, 226, 0.12);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ── Branch banner ───────────────────────────────────── */
+.branch-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(155, 89, 182, 0.1);
+  border: 1px solid rgba(155, 89, 182, 0.25);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #9b59b6;
+  font-weight: 500;
+}
+
+.branch-moves-card {
+  background: rgba(155, 89, 182, 0.08);
+  border: 1px solid rgba(155, 89, 182, 0.2);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.branch-moves-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9b59b6;
+  margin-bottom: 8px;
+}
+
+.branch-moves-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.move-tag--branch {
+  background: rgba(155, 89, 182, 0.15);
+  color: #9b59b6;
+  font-weight: 500;
+}
+
+.move-sheet-move--branch-point {
+  border: 1px dashed #9b59b6;
+}
+
 /* ── Side panel ──────────────────────────────────────── */
 .game-side-panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 300px;
+  flex-shrink: 0;
 }
 
 .game-info-card {
@@ -543,6 +762,15 @@
   color: #fff;
 }
 
+/* ── Shortcuts hint ──────────────────────────────────── */
+.shortcuts-hint {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  text-align: center;
+  padding: 8px;
+  line-height: 1.6;
+}
+
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 900px) {
   .games-table th:nth-child(4),
@@ -555,11 +783,25 @@
 
 @media (max-width: 768px) {
   .game-replay-layout {
-    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .engine-lines-panel {
+    width: 100%;
+    min-height: auto;
+    flex-direction: row;
+  }
+
+  .game-side-panel {
+    width: 100%;
   }
 
   .games-filters {
     flex-direction: column;
     align-items: flex-start;
   }
+  .engine-toggle--off {
+  align-self: flex-start;
+  margin: 4px 0;
+}
 }

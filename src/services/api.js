@@ -80,24 +80,22 @@ export const gamesApi = {
   sync: () => api.post('/sync'),
 };
 
-// ── Repertoire ────────────────────────────────────────────
 export const repertoireApi = {
   list: (color) =>
     api.get(`/v1/repertoires${color ? `?color=${color}` : ''}`),
   get: (id) => api.get(`/v1/repertoires/${id}`),
   create: (data) => api.post('/v1/repertoires', data),
   delete: (id) => api.delete(`/v1/repertoires/${id}`),
-
   addLine: (repId, data) => api.post(`/v1/repertoires/${repId}/lines`, data),
   updateLine: (repId, lineId, data) =>
     api.put(`/v1/repertoires/${repId}/lines/${lineId}`, data),
   deleteLine: (repId, lineId) =>
     api.delete(`/v1/repertoires/${repId}/lines/${lineId}`),
-
+  updateMoveAnnotation: (repId, lineId, moveId, annotation) =>
+    api.put(`/v1/repertoires/${repId}/lines/${lineId}/moves/${moveId}`, { annotation }),
   getDrill: (repId) => api.get(`/v1/repertoires/${repId}/drill`),
   submitDrillResult: (repId, data) =>
     api.post(`/v1/repertoires/${repId}/drill/result`, data),
-
   getDeviations: (repId, limit = 20) =>
     api.get(`/v1/repertoires/${repId}/deviations?limit=${limit}`),
   getAccuracy: (repId) => api.get(`/v1/repertoires/${repId}/accuracy`),

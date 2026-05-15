@@ -1,15 +1,22 @@
 import axios from 'axios';
+import { supabase } from './supabase';
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL || '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach JWT token to every request
+// Store token for sync access
+let currentToken = null;
+
+export const setAuthToken = (token) => {
+  currentToken = token;
+};
+
+// Attach token to every request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (currentToken) {
+    config.headers.Authorization = `Bearer ${currentToken}`;
   }
   return config;
 });
@@ -17,9 +24,9 @@ api.interceptors.request.use((config) => {
 // Redirect to login on 401
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
+      await supabase.auth.signOut();
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -35,14 +42,6 @@ function params(obj) {
   return { params: p };
 }
 
-// ── Auth ──────────────────────────────────────────────────
-export const authApi = {
-  login: (username, password) =>
-    api.post('/v1/auth/login', { username, password }),
-  register: (username, password, chessComUsername) =>
-    api.post('/v1/auth/register', { username, password, chessComUsername }),
-};
-
 // ── Stats ─────────────────────────────────────────────────
 export const statsApi = {
   getOverview: (filters = {}) =>
@@ -51,19 +50,16 @@ export const statsApi = {
       timeClass: filters.timeClass,
       color: filters.color,
     })),
-
   getWinRatesByColor: (filters = {}) =>
     api.get('/stats/color', params({
       range: filters.timeRange,
       timeClass: filters.timeClass,
     })),
-
   getRatingProgression: (filters = {}) =>
     api.get('/stats/rating', params({
       range: filters.timeRange,
       timeClass: filters.timeClass,
     })),
-
   getOpenings: (filters = {}) =>
     api.get('/stats/openings', params({
       range: filters.timeRange,
@@ -75,11 +71,12 @@ export const statsApi = {
 // ── Games ─────────────────────────────────────────────────
 export const gamesApi = {
   list: (params) => api.get('/games', { params }),
-  get: (id) => api.get(`/games/${id}`),          // <-- add this
+  get: (id) => api.get(`/games/${id}`),
   search: (filters) => api.get('/games/search', { params: filters }),
   sync: () => api.post('/sync'),
 };
 
+// ── Repertoire ────────────────────────────────────────────
 export const repertoireApi = {
   list: (color) =>
     api.get(`/v1/repertoires${color ? `?color=${color}` : ''}`),

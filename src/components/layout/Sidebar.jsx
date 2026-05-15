@@ -88,8 +88,8 @@ const navItems = [
   { to: '/drill', icon: Target, label: 'Drill' },
 ];
 
-export default function Sidebar({ username, onSync, syncing }) {
-  const handleLogout = () => {
+export default function Sidebar({ username, onSync, syncing, onLogout }) {
+  const handleLogout = () => { if (onLogout) { onLogout(); return; }
     localStorage.removeItem('token');
     window.location.href = '/login';
   };

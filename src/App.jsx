@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { supabase } from './services/supabase';
+import api, { setAuthToken } from './services/api';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './pages/Dashboard/Dashboard';
 import RepertoireList from './pages/Repertoire/RepertoireList';
@@ -9,7 +11,8 @@ import DrillPicker from './pages/Drill/DrillPicker';
 import GamesList from './pages/Games/GamesList';
 import GameDetail from './pages/Games/GameDetail';
 import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
+import AuthCallback from './pages/Auth/AuthCallback';
+import AccountSetup from './pages/Auth/AccountSetup';
 import './styles/global.css';
 
 function useWindowWidth() {
@@ -22,33 +25,42 @@ function useWindowWidth() {
   return width;
 }
 
-// Auth guard — redirects to /login if no token
-function RequireAuth({ children }) {
-  const token = localStorage.getItem('token');
+function RequireAuth({ children, session, userProfile, loading }) {
   const location = useLocation();
 
-  if (!token) {
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        height: '100vh', color: 'var(--text-tertiary)', fontSize: '14px',
+      }}>
+        Loading…
+      </div>
+    );
+  }
+
+  if (!session) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  return children;
-}
-
-// Redirect away from auth pages if already logged in
-function RedirectIfAuth({ children }) {
-  const token = localStorage.getItem('token');
-
-  if (token) {
-    return <Navigate to="/" replace />;
+  if (userProfile?.needsSetup) {
+    return <Navigate to="/setup" replace />;
   }
 
   return children;
 }
 
-function AppLayout({ children }) {
+function RedirectIfAuth({ children, session, userProfile }) {
+  if (session && userProfile && !userProfile.needsSetup) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
+function AppLayout({ children, userProfile, onLogout }) {
   const [syncing, setSyncing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const username = localStorage.getItem('chessComUsername') || localStorage.getItem('username') || '';
+  const username = userProfile?.chessComUsername || userProfile?.username || '';
   const width = useWindowWidth();
   const collapsed = width < 800;
 
@@ -67,36 +79,31 @@ function AppLayout({ children }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Overlay for mobile sidebar */}
       {collapsed && sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
           style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.4)',
-            zIndex: 99,
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.4)', zIndex: 99,
             transition: 'opacity 0.2s ease',
           }}
         />
       )}
 
-      {/* Sidebar - fixed on desktop, slide-in on mobile */}
       <div style={{
         position: 'fixed',
         left: collapsed && !sidebarOpen ? '-260px' : '0',
-        top: 0,
-        zIndex: 100,
+        top: 0, zIndex: 100,
         transition: 'left 0.25s ease',
       }}>
         <Sidebar
           username={username}
           onSync={handleSync}
           syncing={syncing}
+          onLogout={onLogout}
         />
       </div>
 
-      {/* Main content */}
       <main style={{
         marginLeft: collapsed ? 0 : '240px',
         flex: 1,
@@ -105,25 +112,16 @@ function AppLayout({ children }) {
         transition: 'margin-left 0.25s ease, padding 0.25s ease',
         minWidth: 0,
       }}>
-        {/* Mobile hamburger */}
         {collapsed && (
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             style={{
-              position: 'fixed',
-              top: '12px',
-              left: '12px',
-              zIndex: 98,
+              position: 'fixed', top: '12px', left: '12px', zIndex: 98,
               background: 'var(--bg-primary)',
               border: '1px solid var(--border-light)',
-              borderRadius: '8px',
-              padding: '8px 10px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '13px',
-              color: 'var(--text-secondary)',
+              borderRadius: '8px', padding: '8px 10px',
+              cursor: 'pointer', display: 'flex', alignItems: 'center',
+              gap: '6px', fontSize: '13px', color: 'var(--text-secondary)',
               fontFamily: 'inherit',
             }}
           >
@@ -131,7 +129,6 @@ function AppLayout({ children }) {
             <span>Menu</span>
           </button>
         )}
-
         {children}
       </main>
     </div>
@@ -139,21 +136,93 @@ function AppLayout({ children }) {
 }
 
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchUserProfile = async () => {
+    try {
+      const res = await api.get('/v1/auth/me');
+      setUserProfile(res.data);
+      if (res.data.chessComUsername) {
+        localStorage.setItem('chessComUsername', res.data.chessComUsername);
+        localStorage.setItem('username', res.data.username);
+      }
+      return res.data;
+    } catch (err) {
+      console.error('Failed to fetch user profile:', err);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session ? 'found' : 'none');
+      setSession(session);
+      setAuthToken(session?.access_token || null);
+      if (session) {
+        fetchUserProfile().then(() => setLoading(false));
+      } else {
+        setLoading(false);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth event:', event, 'Session:', session ? 'found' : 'none');
+        setSession(session);
+        setAuthToken(session?.access_token || null);
+        if (session) {
+          await fetchUserProfile();
+        } else {
+          setUserProfile(null);
+          localStorage.removeItem('chessComUsername');
+          localStorage.removeItem('username');
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+    setUserProfile(null);
+    setAuthToken(null);
+    localStorage.removeItem('chessComUsername');
+    localStorage.removeItem('username');
+  };
+
+  const handleSetupComplete = (profile) => {
+    setUserProfile(profile);
+    if (profile.chessComUsername) {
+      localStorage.setItem('chessComUsername', profile.chessComUsername);
+      localStorage.setItem('username', profile.username);
+    }
+  };
+
   return (
     <BrowserRouter>
       <Routes>
-        {/* Auth pages — no sidebar */}
         <Route path="/login" element={
-          <RedirectIfAuth><Login /></RedirectIfAuth>
+          <RedirectIfAuth session={session} userProfile={userProfile}><Login /></RedirectIfAuth>
         } />
-        <Route path="/register" element={
-          <RedirectIfAuth><Register /></RedirectIfAuth>
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route path="/setup" element={
+          session ? (
+            <AccountSetup onSetupComplete={handleSetupComplete} />
+          ) : (
+            <Navigate to="/login" replace />
+          )
         } />
 
-        {/* Protected pages — with sidebar */}
         <Route path="/*" element={
-          <RequireAuth>
-            <AppLayout>
+          <RequireAuth session={session} userProfile={userProfile} loading={loading}>
+            <AppLayout userProfile={userProfile} onLogout={handleLogout}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/games" element={<GamesList />} />

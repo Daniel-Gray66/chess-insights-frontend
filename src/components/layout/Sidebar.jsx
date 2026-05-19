@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
@@ -6,6 +5,7 @@ import {
   Swords,
   BookOpen,
   Target,
+  Globe,
   LogOut,
   RefreshCw,
 } from 'lucide-react';
@@ -86,10 +86,12 @@ const navItems = [
   { to: '/games', icon: Swords, label: 'Games' },
   { to: '/repertoire', icon: BookOpen, label: 'Repertoire' },
   { to: '/drill', icon: Target, label: 'Drill' },
+  { to: '/community', icon: Globe, label: 'Community' },
 ];
 
 export default function Sidebar({ username, onSync, syncing, onLogout }) {
-  const handleLogout = () => { if (onLogout) { onLogout(); return; }
+  const handleLogout = () => {
+    if (onLogout) { onLogout(); return; }
     localStorage.removeItem('token');
     window.location.href = '/login';
   };
@@ -99,9 +101,10 @@ export default function Sidebar({ username, onSync, syncing, onLogout }) {
       <div style={logoStyle}>
         <span style={{ fontSize: '24px', lineHeight: 1 }}>♞</span>
         <span style={{ fontSize: '16px', fontWeight: 600, letterSpacing: '-0.02em' }}>
-          Chess insights
+          KlaroChess
         </span>
       </div>
+
       {username && <div style={userStyle}>{username}</div>}
 
       <nav style={navStyle}>

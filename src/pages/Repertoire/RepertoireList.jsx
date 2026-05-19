@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { repertoireApi } from '../../services/api';
 import { BookOpen, Plus, Trash2, ChevronRight, Target, Crosshair } from 'lucide-react';
 import './RepertoireList.css';
+import VisibilityToggle from './VisibilityToggle';
+import './VisibilityToggle.css';
 
 export default function RepertoireList() {
   const [repertoires, setRepertoires] = useState([]);
@@ -176,16 +178,23 @@ export default function RepertoireList() {
                   <span className={`color-dot color-dot--${rep.color?.toLowerCase()}`} />
                   {rep.color}
                 </div>
-                <button
-                  className="btn-icon btn-icon--danger"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(rep.id, rep.name);
-                  }}
-                  title="Delete"
-                >
-                  <Trash2 size={14} />
-                </button>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <VisibilityToggle
+                    repertoireId={rep.id}
+                    currentVisibility={rep.visibility || 'PRIVATE'}
+                    onUpdate={() => loadRepertoires()}
+                  />
+                  <button
+                    className="btn-icon btn-icon--danger"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(rep.id, rep.name);
+                    }}
+                    title="Delete"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
               <h3 className="rep-card-name">{rep.name}</h3>
               {rep.description && <p className="rep-card-desc">{rep.description}</p>}

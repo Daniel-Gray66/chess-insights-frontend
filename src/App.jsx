@@ -10,6 +10,8 @@ import DrillPage from './pages/Drill/Drill';
 import DrillPicker from './pages/Drill/DrillPicker';
 import GamesList from './pages/Games/GamesList';
 import GameDetail from './pages/Games/GameDetail';
+import Community from './pages/Community/Community';
+import CommunityRepertoireView from './pages/Community/CommunityRepertoireView';
 import Login from './pages/Auth/Login';
 import AuthCallback from './pages/Auth/AuthCallback';
 import AccountSetup from './pages/Auth/AccountSetup';
@@ -156,9 +158,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session ? 'found' : 'none');
       setSession(session);
       setAuthToken(session?.access_token || null);
       if (session) {
@@ -168,10 +168,8 @@ export default function App() {
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth event:', event, 'Session:', session ? 'found' : 'none');
         setSession(session);
         setAuthToken(session?.access_token || null);
         if (session) {
@@ -231,6 +229,8 @@ export default function App() {
                 <Route path="/repertoire/:id" element={<RepertoireDetail />} />
                 <Route path="/repertoire/:id/drill" element={<DrillPage />} />
                 <Route path="/drill" element={<DrillPicker />} />
+                <Route path="/community" element={<Community />} />
+                <Route path="/community/:id" element={<CommunityRepertoireView />} />
               </Routes>
             </AppLayout>
           </RequireAuth>

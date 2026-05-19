@@ -83,6 +83,8 @@ export const repertoireApi = {
   get: (id) => api.get(`/v1/repertoires/${id}`),
   create: (data) => api.post('/v1/repertoires', data),
   delete: (id) => api.delete(`/v1/repertoires/${id}`),
+  updateVisibility: (id, visibility) =>
+    api.patch(`/v1/repertoires/${id}/visibility`, { visibility }),
   addLine: (repId, data) => api.post(`/v1/repertoires/${repId}/lines`, data),
   updateLine: (repId, lineId, data) =>
     api.put(`/v1/repertoires/${repId}/lines/${lineId}`, data),
@@ -96,6 +98,19 @@ export const repertoireApi = {
   getDeviations: (repId, limit = 20) =>
     api.get(`/v1/repertoires/${repId}/deviations?limit=${limit}`),
   getAccuracy: (repId) => api.get(`/v1/repertoires/${repId}/accuracy`),
+};
+
+// ── Community ─────────────────────────────────────────────
+export const communityApi = {
+  browse: (color) =>
+    api.get(`/v1/community/repertoires${color ? `?color=${color}` : ''}`),
+  search: (query, color) =>
+    api.get('/v1/community/repertoires/search', params({ q: query, color })),
+  getRepertoire: (id) => api.get(`/v1/community/repertoires/${id}`),
+  bookmark: (id) => api.post(`/v1/community/repertoires/${id}/bookmark`),
+  unbookmark: (id) => api.delete(`/v1/community/repertoires/${id}/bookmark`),
+  getBookmarks: () => api.get('/v1/community/bookmarks'),
+  copy: (id) => api.post(`/v1/community/repertoires/${id}/copy`),
 };
 
 export default api;
